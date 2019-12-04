@@ -1,5 +1,5 @@
 const fs = require('fs-extra');
-const os = require('os');
+const detectNewline = require('detect-newline');
 const path = require('path');
 
 const config = require('./config')
@@ -25,7 +25,8 @@ fs.writeFileSync(prCommentsJson, JSON.stringify(prComments, null, 2))
 
 const packedRefsPath = `${config.source.repo}.git/packed-refs`;
 const packedRefsText = fs.readFileSync(packedRefsPath, { encoding: 'utf-8' });
-const refs = packedRefsText.split(os.EOL);
+const newline = detectNewline.graceful(packedRefsText);
+const refs = packedRefsText.split(newline);
 const refNum = /refs\/heads\/pr([0-9]+)head/
 const updated = refs.map(ref => {
   const match = ref.match(refNum);
@@ -35,7 +36,7 @@ const updated = refs.map(ref => {
   }
   return ref;
 });
-fs.writeFileSync(packedRefsPath, updated.join(os.EOL));
+fs.writeFileSync(packedRefsPath, updated.join(newline));
 
 const issuesDir = `${config.source.repo}/issues`;
 const issues = fs.readdirSync(issuesDir)
